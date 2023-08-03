@@ -23,7 +23,7 @@ pub fn twitter_login() -> Result<Vec<Cookie>> {
     )?;
 
     let cookies = tab.get_cookies()?;
-    tab.close(false)?;
+    tab.close(true)?;
 
     Ok(cookies)
 }

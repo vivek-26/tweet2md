@@ -12,8 +12,7 @@ pub fn app_config_dir() -> Option<PathBuf> {
 pub fn browser_data_dir() -> Option<PathBuf> {
     match dirs::home_dir() {
         Some(path) => Some(
-            path.join(constants::APP_CONFIG_DIR)
-                .join(constants::HEADLESS_BROWSER_USER_DATA_DIR),
+            path.join(constants::APP_CONFIG_DIR).join(constants::HEADLESS_BROWSER_USER_DATA_DIR),
         ),
         None => None,
     }
