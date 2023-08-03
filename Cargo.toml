@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.72"
+base64 = "0.21.2"
 dirs = "5.0.1"
 thiserror = "1.0.44"
 serde = { version = "1.0.179", features = ["derive"] }
