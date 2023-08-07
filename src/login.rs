@@ -1,7 +1,6 @@
 use anyhow::Result;
 use headless_chrome::protocol::cdp::Network::Cookie;
 use headless_chrome::{Browser, LaunchOptions};
-use serde_json;
 
 use std::time::Duration;
 

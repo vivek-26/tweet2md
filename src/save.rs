@@ -12,7 +12,6 @@ use headless_chrome::protocol::cdp::Fetch::{
 };
 use headless_chrome::protocol::cdp::Network::{CookieParam, ResourceType};
 use headless_chrome::{Browser, LaunchOptions};
-use serde_json;
 
 use std::sync::{Arc, Mutex};
 
