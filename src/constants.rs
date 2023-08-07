@@ -1,17 +1,28 @@
-// App config directory
-pub const APP_CONFIG_DIR: &str = ".tweet2md";
+use std::path::PathBuf;
 
-// Headless browser user data directory
-pub const HEADLESS_BROWSER_USER_DATA_DIR: &str = "chrome_data_dir";
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref HOME_DIR: PathBuf = match dirs::home_dir() {
+        Some(path) => path,
+        None => panic!("failed to get home directory"),
+    };
+
+    // App config directory
+    pub static ref APP_CONFIG_DIR: PathBuf = HOME_DIR.join(".tweet2md");
+
+    // Headless browser user data directory
+    pub static ref HEADLESS_BROWSER_USER_DATA_DIR: PathBuf = APP_CONFIG_DIR.join("chrome_data_dir");
+
+    // Twitter cookie file name
+    pub static ref TWITTER_COOKIE_FILE: PathBuf = APP_CONFIG_DIR.join("twitter_cookies.json");
+}
 
 // Twitter Login URL
 pub const TWITTER_LOGIN_URL: &str = "https://twitter.com/i/flow/login";
 
 // Twitter Logged In Selector
 pub const TWITTER_LOGGED_IN_SELECTOR: &str = r#"div[aria-label="Home timeline"]"#;
-
-// Twitter cookie file name
-pub const TWITTER_COOKIE_FILE: &str = "twitter_cookies.json";
 
 // Twitter TweetDetail GraphQL API
 pub const TWITTER_TWEET_DETAIL_API: &str =

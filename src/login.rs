@@ -4,12 +4,12 @@ use headless_chrome::{Browser, LaunchOptions};
 
 use std::time::Duration;
 
-use crate::{constants, helper};
+use crate::constants;
 
 pub fn twitter_login() -> Result<Vec<Cookie>> {
     let browser = Browser::new(LaunchOptions {
         headless: false,
-        user_data_dir: helper::browser_data_dir(),
+        user_data_dir: Some(constants::HEADLESS_BROWSER_USER_DATA_DIR.to_path_buf()),
         ..Default::default()
     })?;
 
@@ -29,11 +29,6 @@ pub fn twitter_login() -> Result<Vec<Cookie>> {
 
 pub fn save_twitter_cookies(cookies: Vec<Cookie>) -> Result<()> {
     let cookies_str = serde_json::to_string_pretty(&cookies)?;
-    match helper::twitter_cookie_file() {
-        Some(path) => {
-            std::fs::write(path, cookies_str)?;
-            Ok(())
-        }
-        None => panic!("Could not find home directory"),
-    }
+    std::fs::write(constants::TWITTER_COOKIE_FILE.to_path_buf(), cookies_str)?;
+    Ok(())
 }

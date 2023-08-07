@@ -16,15 +16,14 @@ use headless_chrome::{Browser, LaunchOptions};
 use std::sync::{Arc, Mutex};
 
 use crate::constants;
-use crate::helper;
 
 pub fn save_twitter_thread(tweet_url: &str) -> Result<()> {
-    let cookie_file = std::fs::File::open(helper::twitter_cookie_file().unwrap())?;
+    let cookie_file = std::fs::File::open(constants::TWITTER_COOKIE_FILE.to_path_buf())?;
     let cookies: Vec<CookieParam> = serde_json::from_reader(cookie_file)?;
 
     let browser = Browser::new(LaunchOptions {
         headless: true,
-        user_data_dir: helper::browser_data_dir(),
+        user_data_dir: Some(constants::HEADLESS_BROWSER_USER_DATA_DIR.to_path_buf()),
         ..Default::default()
     })?;
 

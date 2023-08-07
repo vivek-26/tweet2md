@@ -5,13 +5,12 @@ use std::fs;
 
 mod cli;
 mod constants;
-mod helper;
 mod login;
 mod save;
 
 fn main() -> Result<()> {
     let args = cli::Tweet2Md::parse();
-    let twitter_cookie = fs::metadata(helper::twitter_cookie_file().unwrap())?;
+    let twitter_cookie = fs::metadata(constants::TWITTER_COOKIE_FILE.to_path_buf())?;
 
     match args.command {
         cli::Command::Login => {
