@@ -1,19 +1,18 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 use std::fs;
 
-mod cli;
 mod constants;
 mod login;
 mod save;
 
 fn main() -> Result<()> {
-    let args = cli::Tweet2Md::parse();
+    let args = Cli::parse();
     let twitter_cookie = fs::metadata(constants::TWITTER_COOKIE_FILE.to_path_buf())?;
 
     match args.command {
-        cli::Command::Login => {
+        Command::Login => {
             if twitter_cookie.is_file() {
                 println!("already logged in");
             } else {
@@ -22,7 +21,7 @@ fn main() -> Result<()> {
                 login::save_twitter_cookies(cookies)?;
             }
         }
-        cli::Command::Save { url } => {
+        Command::Save { url } => {
             if twitter_cookie.is_file() {
                 match save::save_twitter_thread(&url) {
                     Ok(_) => println!("saved twitter thread"),
@@ -35,4 +34,29 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Debug, Parser)]
+#[clap(
+    name = "tweet2md",
+    version = "0.1.0",
+    author = "Vivek Kumar",
+    about = "Converts a twitter thread to markdown"
+)]
+struct Cli {
+    #[clap(subcommand)]
+    pub command: Command,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    /// Login to twitter
+    Login,
+
+    /// Save a twitter thread
+    #[clap(arg_required_else_help = true)]
+    Save {
+        /// URL of the twitter thread
+        url: String,
+    },
 }
