@@ -1,19 +1,19 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-mod commands;
 mod constants;
 mod headless_chrome;
+mod operations;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
 
     match args.command {
         Command::Login => {
-            commands::twitter_login()?;
+            operations::twitter_login()?;
         }
         Command::Save { url } => {
-            commands::save_twitter_thread(&url)?;
+            operations::save_twitter_thread(&url)?;
         }
     }
 
