@@ -1,35 +1,19 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use std::fs;
-
+mod commands;
 mod constants;
-mod login;
-mod save;
+mod headless_chrome;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let twitter_cookie = fs::metadata(constants::TWITTER_COOKIE_FILE.to_path_buf())?;
 
     match args.command {
         Command::Login => {
-            if twitter_cookie.is_file() {
-                println!("already logged in");
-            } else {
-                println!("logging in to twitter");
-                let cookies = login::twitter_login()?;
-                login::save_twitter_cookies(cookies)?;
-            }
+            commands::twitter_login()?;
         }
         Command::Save { url } => {
-            if twitter_cookie.is_file() {
-                match save::save_twitter_thread(&url) {
-                    Ok(_) => println!("saved twitter thread"),
-                    Err(err) => println!("failed to save twitter thread: {}", err),
-                }
-            } else {
-                println!("user not logged in, use `tweet2md login` to login");
-            }
+            commands::save_twitter_thread(&url)?;
         }
     }
 
