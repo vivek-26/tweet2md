@@ -1,3 +1,4 @@
+use colored::Colorize;
 use std::path::PathBuf;
 
 use lazy_static::lazy_static;
@@ -31,3 +32,11 @@ pub const TWITTER_TWEET_DETAIL_API: &str =
 // In Headless mode, the default user agent is "HeadlessChrome". This is easily detected by websites.
 // We set the user agent to a common browser to avoid detection.
 pub const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
+
+pub fn print_info(args: std::fmt::Arguments) {
+    println!("{} {}", "info".green().bold(), args);
+}
+
+pub fn print_error(args: std::fmt::Arguments) {
+    println!("{} {}", "error".red().bold(), args);
+}
