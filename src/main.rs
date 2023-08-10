@@ -1,9 +1,9 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-mod constants;
 mod headless_chrome;
 mod operations;
+mod util;
 
 fn main() -> Result<()> {
     let args = Cli::parse();

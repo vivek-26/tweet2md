@@ -19,7 +19,7 @@ use headless_chrome::{
 };
 use parking_lot::Mutex;
 
-use crate::constants;
+use crate::util::{self, constants};
 use std::fs::File;
 use std::sync::Arc;
 use std::time::Duration;
@@ -128,14 +128,11 @@ impl RequestInterceptor for TweetDetailInterceptor {
     ) -> RequestPausedDecision {
         if !event.params.request.url.contains(constants::TWITTER_TWEET_DETAIL_API) {
             // TODO: This is a bit spammy, but useful for debugging. Maybe add a debug flag?
-            constants::print_info(format_args!(
-                "not intercepting url: {}",
-                event.params.request.url
-            ));
+            util::print_info(format_args!("not intercepting url: {}", event.params.request.url));
             return RequestPausedDecision::Continue(None);
         }
 
-        constants::print_info(format_args!(
+        util::print_info(format_args!(
             "intercepted tweet detail api: {}",
             event.params.request.url
         ));
