@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 
 mod headless_chrome;
 mod operations;
+mod twitter_threads;
 mod util;
 
 fn main() -> Result<()> {

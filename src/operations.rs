@@ -2,6 +2,7 @@ use anyhow::Result;
 use colored::Colorize;
 
 use crate::headless_chrome;
+use crate::twitter_threads::TwitterThread;
 use crate::util::{self, constants};
 
 pub fn twitter_login() -> Result<()> {
@@ -29,7 +30,8 @@ pub fn save_twitter_thread(tweet_url: &str) -> Result<()> {
     util::print_info(format_args!("fetching tweet {}", tweet_url));
     let cookie_file = std::fs::File::open(constants::TWITTER_COOKIE_FILE.to_path_buf())?;
     let twitter_thread = headless_chrome::fetch_twitter_thread(tweet_url, cookie_file)?;
-    util::print_info(format_args!("tweet: {}", twitter_thread));
+    let thread: TwitterThread = twitter_thread.try_into()?;
+    util::print_info(format_args!("tweet: {:?}", thread));
     Ok(())
 }
 

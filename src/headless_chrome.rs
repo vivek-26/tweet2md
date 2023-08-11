@@ -19,6 +19,7 @@ use headless_chrome::{
 };
 use parking_lot::Mutex;
 
+use crate::twitter_threads::RawThreadResponse;
 use crate::util::{self, constants};
 use std::fs::File;
 use std::sync::Arc;
@@ -29,14 +30,17 @@ pub enum Error {
     #[error("headless browser error: {0}")]
     Browser(#[from] anyhow::Error),
 
-    #[error("cookie deserialization error: {0}")]
-    CookieDeserialize(#[from] serde_json::Error),
+    #[error("could not deserialize cookies: {0}")]
+    CookieDeserialize(#[source] serde_json::Error),
 
     #[error("could not intercept twitter api to fetch tweet details")]
     RequestInterception,
 
-    #[error("response base64 decode error: {0}")]
+    #[error("could not base64 decode response: {0}")]
     ResponseDecode(#[from] base64::DecodeError),
+
+    #[error("could not deserialize raw response: {0}")]
+    RawResponseDeserialize(#[from] serde_json::Error),
 }
 
 pub fn twitter_login() -> Result<Vec<Cookie>, Error> {
@@ -62,7 +66,10 @@ pub fn twitter_login() -> Result<Vec<Cookie>, Error> {
     Ok(cookies)
 }
 
-pub fn fetch_twitter_thread(tweet_url: &str, cookie_file: File) -> Result<String, Error> {
+pub fn fetch_twitter_thread(
+    tweet_url: &str,
+    cookie_file: File,
+) -> Result<RawThreadResponse, Error> {
     let cookies: Vec<CookieParam> =
         serde_json::from_reader(cookie_file).map_err(Error::CookieDeserialize)?;
 
@@ -106,7 +113,7 @@ pub fn fetch_twitter_thread(tweet_url: &str, cookie_file: File) -> Result<String
         None => Err(Error::RequestInterception),
     };
 
-    response
+    serde_json::from_str::<serde_json::Value>(&response?).map_err(Error::RawResponseDeserialize)
 }
 
 struct TweetDetailInterceptor {
