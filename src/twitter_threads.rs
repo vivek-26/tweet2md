@@ -14,9 +14,6 @@ pub struct Tweet {
     pub author: String,
     pub author_handle: String,
     pub text: String,
-    pub links: Vec<String>,
-    pub images: Vec<String>,
-    pub videos: Vec<String>,
     pub created_at: String,
 }
 
@@ -77,8 +74,6 @@ fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error
             .as_str()
             .ok_or(SerdeError::custom("legacy.full_text missing or not a string"))?
             .to_string(),
-        images: Vec::new(),
-        videos: Vec::new(),
         author: raw_tweet_object["core"]["user_results"]["result"]["legacy"]["name"]
             .as_str()
             .ok_or(SerdeError::custom(
@@ -95,7 +90,6 @@ fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error
             .as_str()
             .ok_or(SerdeError::custom("legacy.created_at missing or not a string"))?
             .to_string(),
-        links: Vec::new(),
     };
 
     Ok(tweet)
