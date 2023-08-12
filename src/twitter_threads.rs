@@ -11,10 +11,16 @@ pub struct TwitterThread {
 #[derive(Debug)]
 pub struct Tweet {
     pub id: String,
-    pub author: String,
-    pub author_handle: String,
+    pub author: Author,
     pub text: String,
     pub created_at: String,
+}
+
+#[derive(Debug)]
+pub struct Author {
+    pub name: String,
+    pub handle: String,
+    pub url: String,
 }
 
 pub type RawThreadResponse = serde_json::Value;
@@ -65,7 +71,26 @@ fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error
         return Err(SerdeError::custom("expected __typeName to be Tweet"));
     }
 
+    let author_handle = raw_tweet_object["core"]["user_results"]["result"]["legacy"]["screen_name"]
+        .as_str()
+        .ok_or(SerdeError::custom(
+            "core.user_results.result.legacy.screen_name missing or not a string",
+        ))?
+        .to_string();
+
+    let author = Author {
+        name: raw_tweet_object["core"]["user_results"]["result"]["legacy"]["name"]
+            .as_str()
+            .ok_or(SerdeError::custom(
+                "core.user_results.result.legacy.name missing or not a string",
+            ))?
+            .to_string(),
+        handle: author_handle.clone(),
+        url: format!("https://twitter.com/{}", author_handle),
+    };
+
     let tweet = Tweet {
+        author,
         id: raw_tweet_object["rest_id"]
             .as_str()
             .ok_or(SerdeError::custom("rest_id missing or not a string"))?
@@ -73,18 +98,6 @@ fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error
         text: raw_tweet_object["legacy"]["full_text"]
             .as_str()
             .ok_or(SerdeError::custom("legacy.full_text missing or not a string"))?
-            .to_string(),
-        author: raw_tweet_object["core"]["user_results"]["result"]["legacy"]["name"]
-            .as_str()
-            .ok_or(SerdeError::custom(
-                "core.user_results.result.legacy.name missing or not a string",
-            ))?
-            .to_string(),
-        author_handle: raw_tweet_object["core"]["user_results"]["result"]["legacy"]["screen_name"]
-            .as_str()
-            .ok_or(SerdeError::custom(
-                "core.user_results.result.legacy.screen_name missing or not a string",
-            ))?
             .to_string(),
         created_at: raw_tweet_object["legacy"]["created_at"]
             .as_str()
