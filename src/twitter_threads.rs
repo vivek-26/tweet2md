@@ -1,22 +1,25 @@
 use serde::de::Error as SerdeError;
+use serde::Serialize;
 
 use std::convert::TryFrom;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct TwitterThread {
     pub tweet: Tweet,
     pub thread: Vec<Tweet>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Tweet {
     pub id: String,
+    pub index: u8,
     pub author: Author,
     pub text: String,
     pub created_at: String,
+    pub url: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Author {
     pub name: String,
     pub handle: String,
@@ -40,7 +43,7 @@ impl TryFrom<RawThreadResponse> for TwitterThread {
             .ok_or(SerdeError::custom("first tweet entry missing or not an object"))?;
 
         let tweet_data = &first_tweet["content"]["itemContent"]["tweet_results"]["result"];
-        let tweet = parse_tweet(tweet_data)?;
+        let tweet = parse_tweet(tweet_data, 1)?;
 
         // the rest of the tweets are the thread
         let thread_items = tweet_entries[1]["content"]["items"]
@@ -49,9 +52,10 @@ impl TryFrom<RawThreadResponse> for TwitterThread {
 
         let thread = thread_items
             .iter()
-            .map(|item| {
+            .enumerate()
+            .map(|(index, item)| {
                 let tweet_data = &item["item"]["itemContent"]["tweet_results"]["result"];
-                parse_tweet(tweet_data)
+                parse_tweet(tweet_data, index as u8 + 2)
             })
             .collect::<Result<Vec<Tweet>, serde_json::Error>>()?;
 
@@ -59,7 +63,7 @@ impl TryFrom<RawThreadResponse> for TwitterThread {
     }
 }
 
-fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error> {
+fn parse_tweet(tweet_obj: &serde_json::Value, index: u8) -> Result<Tweet, serde_json::Error> {
     let raw_tweet_object =
         tweet_obj.as_object().ok_or(SerdeError::custom("tweet object missing or not an object"))?;
 
@@ -78,6 +82,11 @@ fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error
         ))?
         .to_string();
 
+    let tweet_id = raw_tweet_object["rest_id"]
+        .as_str()
+        .ok_or(SerdeError::custom("rest_id missing or not a string"))?
+        .to_string();
+
     let author = Author {
         name: raw_tweet_object["core"]["user_results"]["result"]["legacy"]["name"]
             .as_str()
@@ -90,11 +99,9 @@ fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error
     };
 
     let tweet = Tweet {
+        id: tweet_id.clone(),
+        index,
         author,
-        id: raw_tweet_object["rest_id"]
-            .as_str()
-            .ok_or(SerdeError::custom("rest_id missing or not a string"))?
-            .to_string(),
         text: raw_tweet_object["legacy"]["full_text"]
             .as_str()
             .ok_or(SerdeError::custom("legacy.full_text missing or not a string"))?
@@ -103,6 +110,7 @@ fn parse_tweet(tweet_obj: &serde_json::Value) -> Result<Tweet, serde_json::Error
             .as_str()
             .ok_or(SerdeError::custom("legacy.created_at missing or not a string"))?
             .to_string(),
+        url: format!("https://twitter.com/{}/status/{}", author_handle, tweet_id),
     };
 
     Ok(tweet)
