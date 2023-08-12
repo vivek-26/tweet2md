@@ -115,3 +115,17 @@ fn parse_tweet(tweet_obj: &serde_json::Value, index: u8) -> Result<Tweet, serde_
 
     Ok(tweet)
 }
+
+pub static THREAD_MARKDOWN_TEMPLATE: &str = r#"
+# {{tweet.author.name}} ([@{{tweet.author.handle}}]({{tweet.author.url}}))
+_{{tweet.created_at}}_
+
+# [#{{tweet.index}}]({{tweet.url}})
+{{tweet.text}}
+
+{{#each thread}}
+# [#{{this.index}}]({{this.url}})
+{{this.text}}
+    
+{{/each}}
+"#;

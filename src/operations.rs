@@ -3,7 +3,7 @@ use colored::Colorize;
 use handlebars::Handlebars;
 
 use crate::headless_chrome;
-use crate::twitter_threads::TwitterThread;
+use crate::twitter_threads::{TwitterThread, THREAD_MARKDOWN_TEMPLATE};
 use crate::util::{self, constants};
 
 pub fn twitter_login() -> Result<()> {
@@ -35,9 +35,8 @@ pub fn save_twitter_thread(tweet_url: &str) -> Result<()> {
     util::print_info(format_args!("tweet fetched successfully, rendering markdown"));
 
     // render markdown using handlebars
-    let mut handlebars = Handlebars::new();
-    handlebars.register_template_file("twitter_thread", "./src/template.hbs")?;
-    let rendered_markdown = handlebars.render("twitter_thread", &thread)?;
+    let handlebars = Handlebars::new();
+    let rendered_markdown = handlebars.render_template(THREAD_MARKDOWN_TEMPLATE, &thread)?;
     std::fs::write("./tweet.md", rendered_markdown)?;
     util::print_info(format_args!("markdown rendered successfully"));
 
