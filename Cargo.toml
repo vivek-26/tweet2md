@@ -11,6 +11,7 @@ base64 = "0.21.2"
 clap = { version = "3.x", features = ["derive"] }
 colored = "2.0.4"
 dirs = "5.0.1"
+handlebars = "4.3.7"
 headless_chrome = { git = "https://github.com/rust-headless-chrome/rust-headless-chrome", features = ["fetch"] }
 lazy_static = "1.4.0"
 parking_lot = "0.12.1"
