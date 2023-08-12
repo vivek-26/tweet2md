@@ -13,8 +13,8 @@ fn main() -> Result<()> {
         Command::Login => {
             operations::twitter_login()?;
         }
-        Command::Save { url } => {
-            operations::save_twitter_thread(&url)?;
+        Command::Save { url, path } => {
+            operations::save_twitter_thread(&url, &path)?;
         }
     }
 
@@ -42,6 +42,11 @@ enum Command {
     #[clap(arg_required_else_help = true)]
     Save {
         /// URL of the twitter thread
+        #[clap(short = 'u', long = "url")]
         url: String,
+
+        /// Path to save the markdown file
+        #[clap(short = 'p', long = "path", default_value = "./thread.md")]
+        path: String,
     },
 }

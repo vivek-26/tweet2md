@@ -19,7 +19,7 @@ pub fn twitter_login() -> Result<()> {
     Ok(())
 }
 
-pub fn save_twitter_thread(tweet_url: &str) -> Result<()> {
+pub fn save_twitter_thread(tweet_url: &str, path: &str) -> Result<()> {
     if !twitter_cookie_file_exists() {
         util::print_error(format_args!(
             "user not logged in, use {} to login",
@@ -37,7 +37,7 @@ pub fn save_twitter_thread(tweet_url: &str) -> Result<()> {
     // render markdown using handlebars
     let handlebars = Handlebars::new();
     let rendered_markdown = handlebars.render_template(THREAD_MARKDOWN_TEMPLATE, &thread)?;
-    std::fs::write("./tweet.md", rendered_markdown)?;
+    std::fs::write(path, rendered_markdown)?;
     util::print_info(format_args!("markdown rendered successfully"));
 
     Ok(())
