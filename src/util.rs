@@ -12,6 +12,10 @@ pub fn print_error(args: std::fmt::Arguments) {
     println!("{} {}", "❌".red().bold(), args);
 }
 
+pub fn twitter_cookie_file_exists() -> bool {
+    std::path::Path::new(constants::TWITTER_COOKIE_FILE.to_path_buf().as_path()).is_file()
+}
+
 pub mod constants {
     use lazy_static::lazy_static;
     use std::path::PathBuf;

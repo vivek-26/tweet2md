@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 
 mod headless_chrome;
 mod operations;
@@ -10,12 +11,21 @@ fn main() -> Result<()> {
     let args = Cli::parse();
 
     match args.command {
-        Command::Login => {
-            operations::twitter_login()?;
-        }
-        Command::Save { url, path } => {
-            operations::save_twitter_thread(&url, &path)?;
-        }
+        Command::Login => match operations::twitter_login() {
+            Ok(_) => util::print_success(format_args!("logged in successfully")),
+            Err(err) => util::print_error(format_args!("login failed: {}", err)),
+        },
+        Command::Save { url, path } => match operations::save_twitter_thread(&url, &path) {
+            Ok(_) => util::print_success(format_args!("thread saved to {}", path)),
+            Err(err) => match err {
+                operations::Error::UserNotLoggedIn => util::print_error(format_args!(
+                    "{}, use {} to login",
+                    err,
+                    "tweet2md login".yellow().bold()
+                )),
+                _ => util::print_error(format_args!("failed to save thread: {}", err)),
+            },
+        },
     }
 
     Ok(())
