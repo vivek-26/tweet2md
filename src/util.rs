@@ -1,11 +1,15 @@
 use colored::Colorize;
 
 pub fn print_info(args: std::fmt::Arguments) {
-    println!("{} {}", "info".green().bold(), args);
+    println!("{} {}", "ⓘ".green().bold(), args);
+}
+
+pub fn print_success(args: std::fmt::Arguments) {
+    println!("{} {}", "✔".green().bold(), args);
 }
 
 pub fn print_error(args: std::fmt::Arguments) {
-    println!("{} {}", "error".red().bold(), args);
+    println!("{} {}", "❌".red().bold(), args);
 }
 
 pub mod constants {

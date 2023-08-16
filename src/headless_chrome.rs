@@ -134,15 +134,10 @@ impl RequestInterceptor for TweetDetailInterceptor {
         event: RequestPausedEvent,
     ) -> RequestPausedDecision {
         if !event.params.request.url.contains(constants::TWITTER_TWEET_DETAIL_API) {
-            // TODO: This is a bit spammy, but useful for debugging. Maybe add a debug flag?
-            util::print_info(format_args!("not intercepting url: {}", event.params.request.url));
             return RequestPausedDecision::Continue(None);
         }
 
-        util::print_info(format_args!(
-            "intercepted tweet detail api: {}",
-            event.params.request.url
-        ));
+        util::print_info(format_args!("intercepted tweet detail api"));
 
         let response_maybe = transport
             .call_method_on_target(
