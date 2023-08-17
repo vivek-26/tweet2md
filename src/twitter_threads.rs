@@ -15,6 +15,7 @@ pub struct Tweet {
     pub index: u8,
     pub author: Author,
     pub text: String,
+    pub media: Option<Vec<Media>>,
     pub created_at: String,
     pub url: String,
 }
@@ -24,6 +25,18 @@ pub struct Author {
     pub name: String,
     pub handle: String,
     pub url: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Media {
+    pub markdown: String,
+    pub media_type: MediaType,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub enum MediaType {
+    Photo,
+    Video,
 }
 
 pub type RawThreadResponse = serde_json::Value;
@@ -98,6 +111,18 @@ fn parse_tweet(tweet_obj: &serde_json::Value, index: u8) -> Result<Tweet, serde_
         url: format!("https://twitter.com/{}", author_handle),
     };
 
+    let media_array = raw_tweet_object["legacy"]["extended_entities"]["media"].as_array();
+    let media = match media_array {
+        Some(media_array) => {
+            if !media_array.is_empty() {
+                Some(parse_media(media_array)?)
+            } else {
+                None
+            }
+        }
+        None => None,
+    };
+
     let tweet = Tweet {
         id: tweet_id.clone(),
         index,
@@ -106,6 +131,7 @@ fn parse_tweet(tweet_obj: &serde_json::Value, index: u8) -> Result<Tweet, serde_
             .as_str()
             .ok_or(SerdeError::custom("legacy.full_text missing or not a string"))?
             .to_string(),
+        media,
         created_at: raw_tweet_object["legacy"]["created_at"]
             .as_str()
             .ok_or(SerdeError::custom("legacy.created_at missing or not a string"))?
@@ -116,16 +142,101 @@ fn parse_tweet(tweet_obj: &serde_json::Value, index: u8) -> Result<Tweet, serde_
     Ok(tweet)
 }
 
+fn parse_media(media_object: &[serde_json::Value]) -> Result<Vec<Media>, serde_json::Error> {
+    media_object
+        .iter()
+        .map(|media| {
+            let media_type = match media["type"]
+                .as_str()
+                .ok_or(SerdeError::custom("media.type missing or not a string"))?
+            {
+                "photo" => MediaType::Photo,
+                "video" => MediaType::Video,
+                _ => return Err(SerdeError::custom("unknown media type")),
+            };
+
+            Ok(Media { markdown: generate_media_markdown(media, media_type.clone())?, media_type })
+        })
+        .collect::<Result<Vec<Media>, serde_json::Error>>()
+}
+
+fn generate_media_markdown(
+    media: &serde_json::Value,
+    media_type: MediaType,
+) -> Result<String, serde_json::Error> {
+    match media_type {
+        MediaType::Photo => Ok(format!(
+            "![photo]({})",
+            media["media_url_https"]
+                .as_str()
+                .ok_or(SerdeError::custom("media.media_url_https missing or not a string"))?
+        )),
+        MediaType::Video => {
+            let video_variants = match media["video_info"]["variants"].as_array() {
+                Some(variants) => {
+                    if variants.is_empty() {
+                        return Err(SerdeError::custom(
+                            "media.video_info.variants is an empty array",
+                        ))?;
+                    }
+
+                    variants
+                }
+                None => {
+                    return Err(SerdeError::custom(
+                        "media.video_info.variants missing or not an array",
+                    ))?
+                }
+            };
+
+            // select the video url with highest bitrate
+            let mut video_url = video_variants[0]["url"]
+                .as_str()
+                .ok_or(SerdeError::custom("variant.url missing or not a string"))?;
+
+            let mut bitrate = 0;
+            for variant in video_variants {
+                let variant_bitrate = match variant["bitrate"].as_u64() {
+                    Some(bitrate) => bitrate,
+                    None => continue,
+                };
+
+                if variant_bitrate > bitrate {
+                    bitrate = variant_bitrate;
+                    video_url = variant["url"]
+                        .as_str()
+                        .ok_or(SerdeError::custom("variant.url missing or not a string"))?;
+                }
+            }
+
+            Ok(format!(
+                "[![video]({})]({})",
+                media["media_url_https"]
+                    .as_str()
+                    .ok_or(SerdeError::custom("media.media_url_https missing or not a string"))?,
+                video_url
+            ))
+        }
+    }
+}
+
 pub static THREAD_MARKDOWN_TEMPLATE: &str = r#"
 # {{tweet.author.name}} ([@{{tweet.author.handle}}]({{tweet.author.url}}))
 _{{tweet.created_at}}_
 
 # [#{{tweet.index}}]({{tweet.url}})
 {{tweet.text}}
+{{#each tweet.media}}
+{{this.markdown}}
+{{/each}}
 
 {{#each thread}}
 # [#{{this.index}}]({{this.url}})
 {{this.text}}
-    
+{{#each this.media}}
+{{this.markdown}}
 {{/each}}
+{{/each}}
+
+### [_View on Twitter_]({{tweet.url}})
 "#;
